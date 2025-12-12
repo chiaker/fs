@@ -1,0 +1,3 @@
+body { padding-bottom: 40px; }
+#usersList div { border-bottom: 1px solid #eee; padding: 6px 0; }
+#createMsg { color: green; }
