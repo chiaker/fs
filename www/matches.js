@@ -4,38 +4,60 @@
   const btn = document.getElementById('btnLoad');
   const area = document.getElementById('matchesArea');
 
-  // prefer localStorage value if present
+  // Prefer localStorage value if present
   const saved = localStorage.getItem('currentUserId');
   if (saved) userIdInput.value = saved;
 
-  // also read query parameter ?id= and prefer it
+  // Also read query parameter ?id= and prefer it
   const searchParams = new URLSearchParams(window.location.search);
   if (searchParams.has('id')) {
     const qid = searchParams.get('id');
     if (qid) userIdInput.value = qid;
   }
 
-  btn.addEventListener('click', async ()=>{
+  btn.addEventListener('click', async () => {
     const id = userIdInput.value.trim();
-    if (!id) return alert('Enter your id');
+    if (!id) {
+      alert('Введите ваш ID');
+      return;
+    }
     localStorage.setItem('currentUserId', id);
-    area.innerHTML = 'loading...';
+    area.innerHTML = '<div class="text-center text-white"><div class="loading"></div><p class="mt-3">Загрузка...</p></div>';
+    
     try {
       const res = await fetch(`${API}/matches?id=${encodeURIComponent(id)}`);
       if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
       const arr = await res.json();
-      if (!Array.isArray(arr) || arr.length===0) { area.innerHTML = '<div class="text-muted">No matches yet</div>'; return; }
-      const html = arr.map(m=>{
-        return `<div class="card mb-2"><div class="card-body d-flex gap-3 align-items-center">${m.photo?`<img src="${m.photo}" style="max-width:120px" class="rounded">`:''}<div><h5 class="mb-0">${m.name}</h5><div class="small text-muted">${m.contact}</div></div></div></div>`;
+      
+      if (!Array.isArray(arr) || arr.length === 0) {
+        area.innerHTML = '<div class="text-center text-white"><h3>Пока нет мэтчей</h3><p>Продолжайте лайкать профили!</p></div>';
+        return;
+      }
+      
+      const html = arr.map(m => {
+        const photoHtml = m.photo 
+          ? `<img src="${API}${m.photo}" alt="${m.name}">`
+          : '<div style="width:100px;height:100px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;">👤</div>';
+        
+        return `
+          <div class="match-card">
+            ${photoHtml}
+            <div class="match-info">
+              <h5>${m.name}</h5>
+              <p><strong>Email:</strong> ${m.contact}</p>
+            </div>
+          </div>
+        `;
       }).join('\n');
+      
       area.innerHTML = html;
     } catch (err) {
-      area.innerText = 'error: ' + err.message;
+      area.innerHTML = `<div class="alert alert-danger">Ошибка: ${err.message}</div>`;
     }
   });
 
-  // If we have an id in the input pre-filled, auto-load matches
+  // Auto-load if we have an id
   if (userIdInput.value && userIdInput.value.trim() !== '') {
-    btn.click();
+    setTimeout(() => btn.click(), 100);
   }
 })();

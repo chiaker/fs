@@ -7,6 +7,7 @@
 #include <fstream>
 #include <thread>
 #include <cstdio>
+#include <chrono>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -192,7 +193,7 @@ int main() {
 
         // spawn a thread to handle the client
         std::thread([client_sock, &pm, &mm]() {
-            // read request (single recv, sufficient for our small demo)
+            // read request headers first
             string req;
             {
                 char buf[8192];
@@ -211,9 +212,39 @@ int main() {
             auto qpos = fullpath.find('?');
             if (qpos != string::npos) { path = fullpath.substr(0, qpos); query = fullpath.substr(qpos+1); }
 
+            // Find header end and extract body
             string body;
             auto hdr_end = req.find("\r\n\r\n");
-            if (hdr_end != string::npos) body = req.substr(hdr_end + 4);
+            if (hdr_end != string::npos) {
+                body = req.substr(hdr_end + 4);
+                
+                // Check Content-Length header to read full body if needed
+                auto cl_pos = req.find("Content-Length:");
+                if (cl_pos != string::npos) {
+                    auto cl_end = req.find("\r\n", cl_pos);
+                    if (cl_end != string::npos) {
+                        string cl_str = req.substr(cl_pos + 15, cl_end - cl_pos - 15);
+                        // trim whitespace
+                        while (!cl_str.empty() && (cl_str[0] == ' ' || cl_str[0] == '\t')) cl_str = cl_str.substr(1);
+                        try {
+                            int content_length = stoi(cl_str);
+                            int body_received = (int)body.size();
+                            // If body is incomplete, read more
+                            if (body_received < content_length) {
+                                int remaining = content_length - body_received;
+                                char* extra_buf = new char[remaining + 1];
+                                int extra_received = recv(client_sock, extra_buf, remaining, 0);
+                                if (extra_received > 0) {
+                                    body += string(extra_buf, extra_received);
+                                }
+                                delete[] extra_buf;
+                            }
+                        } catch (...) {
+                            // ignore parse error, use what we have
+                        }
+                    }
+                }
+            }
 
             // handle OPTIONS quickly
             if (method == "OPTIONS") {
@@ -243,7 +274,37 @@ int main() {
                     }
                 }
 
-                if (method == "GET" && path == "/admin") {
+                // Serve static files
+                if (method == "GET" && (path == "/" || path == "/index.html")) {
+                    std::ifstream ifs("www/index.html");
+                    if (ifs) {
+                        ostringstream oss; oss << ifs.rdbuf();
+                        response_body = oss.str(); contentType = "text/html; charset=utf-8";
+                    } else { status = "404 Not Found"; response_body = "index.html not found"; }
+                }
+                else if (method == "GET" && path == "/matches.html") {
+                    std::ifstream ifs("www/matches.html");
+                    if (ifs) {
+                        ostringstream oss; oss << ifs.rdbuf();
+                        response_body = oss.str(); contentType = "text/html; charset=utf-8";
+                    } else { status = "404 Not Found"; response_body = "matches.html not found"; }
+                }
+                else if (method == "GET" && path == "/app.js") {
+                    std::ifstream ifs("www/app.js");
+                    if (ifs) { ostringstream oss; oss << ifs.rdbuf(); response_body = oss.str(); contentType = "application/javascript; charset=utf-8"; }
+                    else { status = "404 Not Found"; response_body = "app.js not found"; }
+                }
+                else if (method == "GET" && path == "/matches.js") {
+                    std::ifstream ifs("www/matches.js");
+                    if (ifs) { ostringstream oss; oss << ifs.rdbuf(); response_body = oss.str(); contentType = "application/javascript; charset=utf-8"; }
+                    else { status = "404 Not Found"; response_body = "matches.js not found"; }
+                }
+                else if (method == "GET" && path == "/styles.css") {
+                    std::ifstream ifs("www/styles.css");
+                    if (ifs) { ostringstream oss; oss << ifs.rdbuf(); response_body = oss.str(); contentType = "text/css; charset=utf-8"; }
+                    else { status = "404 Not Found"; response_body = "styles.css not found"; }
+                }
+                else if (method == "GET" && path == "/admin") {
                     std::ifstream ifs("www/admin.html");
                     if (ifs) {
                         ostringstream oss; oss << ifs.rdbuf();
