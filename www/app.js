@@ -1,4 +1,18 @@
-const API = 'http://localhost:8080';
+const getAPIBase = () => {
+  const hostname = window.location.hostname;
+  const port = window.location.port || '8080';
+  return `http://${hostname}:${port}`;
+};
+const API = getAPIBase();
+
+const getImageUrl = (photoPath) => {
+  if (!photoPath) return null;
+  if (photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
+    return photoPath;
+  }
+  const path = photoPath.startsWith('/') ? photoPath : `/${photoPath}`;
+  return `${API}${path}`;
+};
 
 let currentUserId = null;
 let allUsers = [];
@@ -274,8 +288,9 @@ function createTinderCard(user) {
   card.className = 'tinder-card';
   card.dataset.userId = user.id;
   
-  const imageHtml = user.photo 
-    ? `<img src="${API}${user.photo}" alt="${user.name}">`
+  const imageUrl = getImageUrl(user.photo);
+  const imageHtml = imageUrl
+    ? `<img src="${imageUrl}" alt="${user.name}" onerror="this.parentElement.innerHTML='<div class=\\'card-image-placeholder\\'>👤</div>'">`
     : `<div class="card-image-placeholder">👤</div>`;
   
   card.innerHTML = `
