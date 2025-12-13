@@ -340,7 +340,13 @@ int main() {
                                 string fname = u.photo;
                                 auto pos = fname.find_last_of("/\\");
                                 if (pos != string::npos) fname = fname.substr(pos+1);
-                                photoUrl = string("/uploads/") + fname;
+                                string pathOnDisk = string("www/uploads/") + fname;
+                                if (std::filesystem::exists(pathOnDisk)) {
+                                    photoUrl = string("/uploads/") + fname;
+                                } else {
+                                    // file not found on disk, do not expose a broken URL
+                                    photoUrl = "";
+                                }
                             }
                         }
                         oss << "{\"id\":"<<u.id<<",\"name\":\""<<escapeJson(u.name)<<"\",\"age\":"<<u.age<<",\"bio\":\""<<escapeJson(u.bio)<<"\",\"photo\":\""<<escapeJson(photoUrl)<<"\"}";
@@ -416,14 +422,18 @@ int main() {
                                     if (!other) continue;
                                     if (i) oss << ",";
                                     string photoUrl = "";
-                                    if (!other->photo.empty()) {
                                         if (other->photo.rfind("http://", 0) == 0 || other->photo.rfind("https://", 0) == 0) {
                                             photoUrl = other->photo;
                                         } else {
                                             string fname = other->photo;
                                             auto pos2 = fname.find_last_of("/\\");
                                             if (pos2 != string::npos) fname = fname.substr(pos2+1);
-                                            photoUrl = string("/uploads/") + fname;
+                                            string pathOnDisk2 = string("www/uploads/") + fname;
+                                            if (std::filesystem::exists(pathOnDisk2)) {
+                                                photoUrl = string("/uploads/") + fname;
+                                            } else {
+                                                photoUrl = "";
+                                            }
                                         }
                                     }
                                     oss << "{";
