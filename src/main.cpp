@@ -324,7 +324,13 @@ int main() {
                         const auto &u = users[i];
                         if (i) oss << ",";
                         string photoUrl = "";
-                        if (!u.photo.empty()) photoUrl = string("/uploads/") + u.photo;
+                        if (!u.photo.empty()) {
+                            if (u.photo.rfind("/uploads/", 0) == 0 || u.photo.rfind("http://", 0) == 0 || u.photo.rfind("https://", 0) == 0) {
+                                photoUrl = u.photo;
+                            } else {
+                                photoUrl = string("/uploads/") + u.photo;
+                            }
+                        }
                         oss << "{\"id\":"<<u.id<<",\"name\":\""<<escapeJson(u.name)<<"\",\"age\":"<<u.age<<",\"bio\":\""<<escapeJson(u.bio)<<"\",\"photo\":\""<<escapeJson(photoUrl)<<"\"}";
                     }
                     oss << "]";
@@ -368,7 +374,12 @@ int main() {
                             userId = stoi(q["user"]); targetId = stoi(q["target"]);
                         } catch (...) { status = "400 Bad Request"; response_body = "invalid user or target id"; }
                         if (status == "200 OK") {
-                            string msg; bool isMatch = mm.like(userId, targetId, msg);
+                            bool isSuper = false;
+                            if (q.count("super") && !q["super"].empty()) {
+                                string v = q["super"];
+                                if (v == "1" || v == "true" || v == "True") isSuper = true;
+                            }
+                            string msg; bool isMatch = mm.like(userId, targetId, msg, isSuper);
                             response_body = msg + "\n";
                         }
                     }
@@ -393,7 +404,13 @@ int main() {
                                     if (!other) continue;
                                     if (i) oss << ",";
                                     string photoUrl = "";
-                                    if (!other->photo.empty()) photoUrl = string("/uploads/") + other->photo;
+                                    if (!other->photo.empty()) {
+                                        if (other->photo.rfind("/uploads/", 0) == 0 || other->photo.rfind("http://", 0) == 0 || other->photo.rfind("https://", 0) == 0) {
+                                            photoUrl = other->photo;
+                                        } else {
+                                            photoUrl = string("/uploads/") + other->photo;
+                                        }
+                                    }
                                     oss << "{";
                                     oss << "\"id\":" << other->id << ",";
                                     oss << "\"name\":\"" << escapeJson(other->name) << "\",";

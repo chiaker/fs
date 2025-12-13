@@ -111,7 +111,7 @@ if (localStorage.getItem('currentUserId')) {
     btnSuperLike.addEventListener('click', () => {
       if (currentCard) {
         const userId = parseInt(currentCard.dataset.userId);
-        handleLike(userId); // Super like is same as like for now
+        handleLike(userId, true); // send super flag
         removeCard(currentCard);
       }
     });
@@ -290,7 +290,7 @@ function createTinderCard(user) {
   
   const imageUrl = getImageUrl(user.photo);
   const imageHtml = imageUrl
-    ? `<img src="${imageUrl}" alt="${user.name}" onerror="this.parentElement.innerHTML='<div class=\\'card-image-placeholder\\'>👤</div>'">`
+    ? `<img src="${imageUrl}" alt="${user.name}">`
     : `<div class="card-image-placeholder">👤</div>`;
   
   card.innerHTML = `
@@ -305,6 +305,15 @@ function createTinderCard(user) {
   
   // Add swipe handlers
   addSwipeHandlers(card);
+
+  // Attach image error handler to show placeholder if image fails to load
+  const img = card.querySelector('img');
+  if (img) {
+    img.addEventListener('error', () => {
+      const c = img.parentElement;
+      if (c) c.innerHTML = '<div class="card-image-placeholder">👤</div>';
+    });
+  }
   
   return card;
 }
@@ -465,10 +474,11 @@ function showNextCard() {
   currentCard = card;
 }
 
-async function handleLike(userId) {
+async function handleLike(userId, isSuper=false) {
   if (!currentUserId) return;
   try {
-    const res = await fetch(`${API}/like?user=${currentUserId}&target=${userId}`, { method: 'POST' });
+    const url = `${API}/like?user=${currentUserId}&target=${userId}` + (isSuper ? '&super=1' : '');
+    const res = await fetch(url, { method: 'POST' });
     const txt = await res.text();
     if (txt.toLowerCase().includes('match')) {
       showMatchNotification(txt);
@@ -486,8 +496,9 @@ async function handleDislike(userId) {
 function showMatchNotification(message) {
   const notification = document.createElement('div');
   notification.className = 'match-notification';
+  const isSuper = message.toLowerCase().includes('super');
   notification.innerHTML = `
-    <h2>💕 Это Мэтч!</h2>
+    <h2>${isSuper ? '💫 СуперМэтч!' : '💕 Это Мэтч!'}</h2>
     <p>${message}</p>
     <button class="btn btn-primary" onclick="this.parentElement.remove()">Отлично!</button>
   `;

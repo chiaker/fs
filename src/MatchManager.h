@@ -7,7 +7,7 @@
 class MatchManager {
 public:
     MatchManager(ProfileManager &pm);
-    bool like(int userId, int targetId, std::string &outMsg);
+    bool like(int userId, int targetId, std::string &outMsg, bool isSuper = false);
     int totalMatches() const;
 
 private:

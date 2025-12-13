@@ -11,6 +11,7 @@ public:
     std::string contact;
     std::vector<int> likes; // ids of users this user liked
     std::vector<int> matches; // ids of matched users
+    std::vector<int> superlikes; // ids of users this user superliked
     std::string photo; // relative path to photo under www/uploads
 
     User();

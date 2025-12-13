@@ -35,6 +35,7 @@ The server listens on port 8080 by default. Endpoints:
 * `GET /users` — list users (simple JSON-like text)
 * `POST /create` — create user (body: `name=...&age=...&bio=...&contact=...`)
 * `POST /like?user=<id>&target=<id>` — user likes target
+* `POST /like?user=<id>&target=<id>&super=1` — user superlikes target (special like)
 * `GET /matches?id=<id>` — list matches and contacts for user
 * `GET /stats` — global statistics (total users, total matches)
 

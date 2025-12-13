@@ -30,8 +30,8 @@ static std::vector<int> splitInts(const std::string &s) {
 std::string User::serialize() const {
     // simple pipe-separated format: id|name|age|bio|contact|likes|matches
     std::ostringstream oss;
-    // new format adds photo between contact and likes: id|name|age|bio|contact|photo|likes|matches
-    oss << id << '|' << name << '|' << age << '|' << bio << '|' << contact << '|' << photo << '|' << joinInts(likes) << '|' << joinInts(matches);
+    // new format adds photo between contact and likes: id|name|age|bio|contact|photo|likes|matches|superlikes
+    oss << id << '|' << name << '|' << age << '|' << bio << '|' << contact << '|' << photo << '|' << joinInts(likes) << '|' << joinInts(matches) << '|' << joinInts(superlikes);
     return oss.str();
 }
 
@@ -52,6 +52,7 @@ User User::deserialize(const std::string &line) {
         u.photo = parts[5];
         if (parts.size() > 6) u.likes = splitInts(parts[6]);
         if (parts.size() > 7) u.matches = splitInts(parts[7]);
+        if (parts.size() > 8) u.superlikes = splitInts(parts[8]);
     }
     return u;
 }

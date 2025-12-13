@@ -51,7 +51,7 @@
       const html = arr.map(m => {
         const imageUrl = getImageUrl(m.photo);
         const photoHtml = imageUrl
-          ? `<img src="${imageUrl}" alt="${m.name}" onerror="this.outerHTML='<div style=\\'width:100px;height:100px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;\\'>👤</div>'">`
+          ? `<img src="${imageUrl}" alt="${m.name}">`
           : '<div style="width:100px;height:100px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;">👤</div>';
         
         return `
@@ -66,6 +66,22 @@
       }).join('\n');
       
       area.innerHTML = html;
+      // Attach image error handlers to all images inside matches area
+      area.querySelectorAll('img').forEach(img => {
+        img.addEventListener('error', () => {
+          const placeholder = document.createElement('div');
+          placeholder.style.width = '100px';
+          placeholder.style.height = '100px';
+          placeholder.style.background = 'linear-gradient(135deg,#667eea 0%,#764ba2 100%)';
+          placeholder.style.borderRadius = '50%';
+          placeholder.style.display = 'flex';
+          placeholder.style.alignItems = 'center';
+          placeholder.style.justifyContent = 'center';
+          placeholder.style.fontSize = '2rem';
+          placeholder.innerText = '👤';
+          img.replaceWith(placeholder);
+        });
+      });
     } catch (err) {
       area.innerHTML = `<div class="alert alert-danger">Ошибка: ${err.message}</div>`;
     }
