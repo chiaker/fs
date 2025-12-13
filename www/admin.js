@@ -1,5 +1,10 @@
  (function(){
-  const API = 'http://localhost:8080';
+  const getAPIBase = () => {
+    const hostname = window.location.hostname;
+    const port = window.location.port || '8080';
+    return `http://${hostname}:${port}`;
+  };
+  const API = getAPIBase();
   const form = document.getElementById('adminForm');
   const result = document.getElementById('result');
   form.addEventListener('submit', async (e)=>{

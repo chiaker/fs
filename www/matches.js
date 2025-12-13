@@ -1,5 +1,19 @@
 (function(){
-  const API = 'http://localhost:8080';
+  const getAPIBase = () => {
+    const hostname = window.location.hostname;
+    const port = window.location.port || '8080';
+    return `http://${hostname}:${port}`;
+  };
+  const API = getAPIBase();
+
+  const getImageUrl = (photoPath) => {
+    if (!photoPath) return null;
+    if (photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
+      return photoPath;
+    }
+    const path = photoPath.startsWith('/') ? photoPath : `/${photoPath}`;
+    return `${API}${path}`;
+  };
   const userIdInput = document.getElementById('userId');
   const btn = document.getElementById('btnLoad');
   const area = document.getElementById('matchesArea');
@@ -35,8 +49,9 @@
       }
       
       const html = arr.map(m => {
-        const photoHtml = m.photo 
-          ? `<img src="${API}${m.photo}" alt="${m.name}">`
+        const imageUrl = getImageUrl(m.photo);
+        const photoHtml = imageUrl
+          ? `<img src="${imageUrl}" alt="${m.name}" onerror="this.outerHTML='<div style=\\'width:100px;height:100px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;\\'>👤</div>'">`
           : '<div style="width:100px;height:100px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;">👤</div>';
         
         return `
