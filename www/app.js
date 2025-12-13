@@ -1,11 +1,11 @@
 const getAPIBase = () => {
-  const hostname = window.location.hostname;
+  const hostname = window.location.hostname || 'localhost';
   const port = window.location.port || '8080';
   return `http://${hostname}:${port}`;
 };
 const API = getAPIBase();
 
-const getImageUrl = (photoPath) => {
+  const getImageUrl = (photoPath) => {
   if (!photoPath) return null;
   if (photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
     return photoPath;
@@ -310,6 +310,7 @@ function createTinderCard(user) {
   const img = card.querySelector('img');
   if (img) {
     img.addEventListener('error', () => {
+      console.warn('Image failed to load:', img.src);
       const c = img.parentElement;
       if (c) c.innerHTML = '<div class="card-image-placeholder">👤</div>';
     });

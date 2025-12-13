@@ -36,6 +36,9 @@ The server listens on port 8080 by default. Endpoints:
 * `POST /create` — create user (body: `name=...&age=...&bio=...&contact=...`)
 * `POST /like?user=<id>&target=<id>` — user likes target
 * `POST /like?user=<id>&target=<id>&super=1` — user superlikes target (special like)
+
+Initialization
+* On startup the server will ensure both `www/uploads/` and `data/` directories exist. If `data/users.db` does not yet exist an empty file will be created automatically. If you wish to pre-populate users, you can add entries to `data/users.db` or use the admin page at `/admin`.
 * `GET /matches?id=<id>` — list matches and contacts for user
 * `GET /stats` — global statistics (total users, total matches)
 

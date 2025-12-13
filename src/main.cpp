@@ -181,8 +181,15 @@ int main() {
     if (bind(listen_sock, (sockaddr*)&addr, sizeof(addr)) < 0) { cerr << "bind failed" << endl; return 1; }
     if (listen(listen_sock, 10) < 0) { cerr << "listen failed" << endl; return 1; }
 
-    // make sure uploads dir exists
+    // make sure uploads and data dirs exist
     std::filesystem::create_directories("www/uploads");
+    std::filesystem::create_directories("data");
+    // ensure users.db exists (create empty file if missing)
+    std::string users_db_path = "data/users.db";
+    if (!std::filesystem::exists(users_db_path)) {
+        std::ofstream ofs(users_db_path, std::ios::app);
+        // leave empty and close
+    }
     cout << "Server listening on port " << port << "\n";
 
     while (true) {
@@ -325,10 +332,15 @@ int main() {
                         if (i) oss << ",";
                         string photoUrl = "";
                         if (!u.photo.empty()) {
-                            if (u.photo.rfind("/uploads/", 0) == 0 || u.photo.rfind("http://", 0) == 0 || u.photo.rfind("https://", 0) == 0) {
+                            // If it's a URL, use it directly
+                            if (u.photo.rfind("http://", 0) == 0 || u.photo.rfind("https://", 0) == 0) {
                                 photoUrl = u.photo;
                             } else {
-                                photoUrl = string("/uploads/") + u.photo;
+                                // Extract basename from any possible path (www/uploads/, uploads/, /uploads/, or just filename)
+                                string fname = u.photo;
+                                auto pos = fname.find_last_of("/\\");
+                                if (pos != string::npos) fname = fname.substr(pos+1);
+                                photoUrl = string("/uploads/") + fname;
                             }
                         }
                         oss << "{\"id\":"<<u.id<<",\"name\":\""<<escapeJson(u.name)<<"\",\"age\":"<<u.age<<",\"bio\":\""<<escapeJson(u.bio)<<"\",\"photo\":\""<<escapeJson(photoUrl)<<"\"}";
@@ -405,10 +417,13 @@ int main() {
                                     if (i) oss << ",";
                                     string photoUrl = "";
                                     if (!other->photo.empty()) {
-                                        if (other->photo.rfind("/uploads/", 0) == 0 || other->photo.rfind("http://", 0) == 0 || other->photo.rfind("https://", 0) == 0) {
+                                        if (other->photo.rfind("http://", 0) == 0 || other->photo.rfind("https://", 0) == 0) {
                                             photoUrl = other->photo;
                                         } else {
-                                            photoUrl = string("/uploads/") + other->photo;
+                                            string fname = other->photo;
+                                            auto pos2 = fname.find_last_of("/\\");
+                                            if (pos2 != string::npos) fname = fname.substr(pos2+1);
+                                            photoUrl = string("/uploads/") + fname;
                                         }
                                     }
                                     oss << "{";

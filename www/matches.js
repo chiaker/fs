@@ -1,6 +1,6 @@
 (function(){
   const getAPIBase = () => {
-    const hostname = window.location.hostname;
+    const hostname = window.location.hostname || 'localhost';
     const port = window.location.port || '8080';
     return `http://${hostname}:${port}`;
   };
@@ -81,6 +81,7 @@
           placeholder.innerText = '👤';
           img.replaceWith(placeholder);
         });
+        img.addEventListener('error', () => console.warn('Match image failed to load:', img.src));
       });
     } catch (err) {
       area.innerHTML = `<div class="alert alert-danger">Ошибка: ${err.message}</div>`;
